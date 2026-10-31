@@ -14,6 +14,15 @@
 | `apps-script/Code.gs` | โค้ดหลังบ้าน วางใน Apps Script ของบัญชี picture@ |
 | `wordpress-embed.html` | โค้ดฝังหน้าในเว็บ ben2.ac.th |
 
+## ลิงก์ที่ใช้งานจริง
+
+- หน้าภาพกิจกรรม: https://suthiphong-ben2.github.io/ben2-activity-photos/
+- อัปโหลดรูป (ครูโสตฯ): https://suthiphong-ben2.github.io/ben2-activity-photos/upload.html
+- ผู้ดูแล: https://suthiphong-ben2.github.io/ben2-activity-photos/admin.html
+- โค้ด: https://github.com/suthiphong-ben2/ben2-activity-photos
+- Apps Script: โปรเจกต์ "BEN2 Activity Photos" Deploy ในนาม picture@ben2.ac.th (ผู้มีสิทธิ์เข้าถึง: ทุกคน)
+- โฟลเดอร์รูป: https://drive.google.com/drive/folders/12apQS-GPzhqnn8nZadRKJ7vLvKlJcQjH (Drive ของ picture@)
+
 ## ทำงานอย่างไร
 
 - ตัวตรวจจับใบหน้า ([face-api](https://github.com/vladmandic/face-api)) ทำงานในเบราว์เซอร์ทั้งหมด
