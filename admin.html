@@ -7,10 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=4">
+<link rel="stylesheet" href="assets/style.css?v=5">
 <link rel="icon" type="image/png" href="favicon.png">
-<script src="config.js?v=4"></script>
-<script src="assets/common.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="assets/common.js?v=5"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -52,6 +52,7 @@
         <button role="tab" data-tab="index" aria-selected="true">กิจกรรมและดัชนีใบหน้า</button>
         <button role="tab" data-tab="up" aria-selected="false">ผู้อัปโหลด</button>
         <button role="tab" data-tab="oo" aria-selected="false">คำขอไม่ให้ค้นเจอหน้า</button>
+        <button role="tab" data-tab="sh" aria-selected="false">หน้าแชร์ LINE</button>
         <button role="tab" data-tab="pw" aria-selected="false">รหัสผ่าน</button>
       </nav>
 
@@ -103,6 +104,32 @@
             ลบคำขอ = ให้ค้นเจอได้อีก (รูปเดิมจะค้นเจอเมื่อกด "ล้าง" แล้วสร้างดัชนีกิจกรรมนั้นใหม่)</p>
           <table class="tbl"><thead><tr><th>#</th><th>วันที่ขอ</th><th></th></tr></thead><tbody id="ooRows"></tbody></table>
           <p id="ooStatus" class="status"></p>
+        </div>
+      </section>
+
+      <!-- หน้าแชร์ LINE -->
+      <section id="tab-sh" hidden>
+        <div class="box">
+          <h2>หน้าแชร์ LINE (รูปปกอัลบั้ม)</h2>
+          <p class="note">เมื่อแชร์อัลบั้มไป LINE จะขึ้นรูปปกและชื่องานของอัลบั้มนั้น ระบบสร้างหน้าแชร์ให้อัตโนมัติเมื่ออัปโหลดรูปแรกของอัลบั้ม
+            ส่วนอัลบั้มที่นำรูปเข้า Drive เอง หรืออยากเปลี่ยนปก ให้กดปุ่มด้านล่าง (หลังกดรอ GitHub อัปเดตประมาณ 1 นาที)</p>
+          <div class="row" style="margin-top:10px">
+            <label class="field grow"><span class="lbl">GitHub token <span id="tokState"></span></span>
+              <input type="password" id="ghToken" autocomplete="off" placeholder="github_pat_…"></label>
+            <button id="tokSave" class="btn primary">บันทึก token</button>
+          </div>
+          <p class="note">สร้างที่ github.com → Settings → Developer settings → Fine-grained tokens · Repository access: เฉพาะ <b id="ghRepo">ben2-activity-photos</b> · Permissions: Contents = Read and write
+            · ระบบเก็บ token ไว้ใน Apps Script และไม่แสดงกลับมาที่หน้านี้</p>
+          <p id="shStatus" class="status"></p>
+        </div>
+        <div class="box">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h3 style="margin:0">อัลบั้ม</h3>
+            <button id="shAll" class="btn primary small">สร้าง/อัปเดตหน้าแชร์ที่ยังไม่มีหรือปกเปลี่ยน</button>
+          </div>
+          <div class="scroll" style="margin-top:8px">
+            <table class="tbl"><thead><tr><th>อัลบั้ม</th><th>รูป</th><th>หน้าแชร์</th><th></th></tr></thead><tbody id="shRows"><tr><td colspan="4" class="loading">กำลังโหลด…</td></tr></tbody></table>
+          </div>
         </div>
       </section>
 
@@ -188,7 +215,8 @@ $('logoutBtn').onclick = () => {
 
 document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
-  ['index', 'up', 'oo', 'pw'].forEach(n => $('tab-' + n).hidden = n !== b.dataset.tab);
+  ['index', 'up', 'oo', 'sh', 'pw'].forEach(n => $('tab-' + n).hidden = n !== b.dataset.tab);
+  if (b.dataset.tab === 'sh') refreshShares();
 });
 
 function btn(label, kind, fn) {
@@ -345,6 +373,61 @@ async function refreshOptOuts() {
     });
   } catch (e) { setStatus('ooStatus', 'โหลดคำขอไม่สำเร็จ: ' + errMsg(e), 'error'); }
 }
+
+/* ---------- หน้าแชร์ LINE ---------- */
+let SH = null, shBusy = false;
+async function refreshShares() {
+  try {
+    SH = await A('adminShareStatus');
+    $('tokState').innerHTML = SH.hasToken ? '<span class="pill ok">ตั้งแล้ว</span>' : '<span class="pill err">ยังไม่ได้ตั้ง</span>';
+    $('ghRepo').textContent = SH.repo;
+    const tb = $('shRows');
+    tb.innerHTML = '';
+    if (!SH.albums.length) { tb.innerHTML = '<tr><td colspan="4" class="empty">ยังไม่มีอัลบั้ม</td></tr>'; return; }
+    for (const a of SH.albums) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td></td><td class="num"></td><td></td><td><div class="actions"></div></td>';
+      tr.cells[0].textContent = a.name;
+      tr.cells[1].textContent = a.count;
+      tr.cells[2].innerHTML = !a.count ? '<span class="pill">ยังไม่มีรูป</span>'
+        : a.stale ? '<span class="pill err">ปกเปลี่ยน</span>' : a.shared ? '<span class="pill ok">มีแล้ว</span>' : '<span class="pill">ยังไม่มี</span>';
+      if (a.count) tr.querySelector('.actions').append(btn(a.shared ? 'อัปเดต' : 'สร้าง', 'ghost', () => publishOne(a)));
+      tb.appendChild(tr);
+    }
+  } catch (e) { setStatus('shStatus', 'โหลดสถานะไม่สำเร็จ: ' + errMsg(e), 'error'); }
+}
+async function publishOne(a) {
+  if (shBusy) return;
+  if (!SH || !SH.hasToken) return setStatus('shStatus', 'กรุณาบันทึก GitHub token ก่อน', 'error');
+  shBusy = true;
+  setStatus('shStatus', 'กำลังสร้างหน้าแชร์: ' + a.name + '…');
+  try { await A('adminPublishShare', { eventId: a.id }); setStatus('shStatus', 'เรียบร้อย: ' + a.name + ' (รอ GitHub อัปเดตประมาณ 1 นาที)', 'ok'); }
+  catch (e) { setStatus('shStatus', errMsg(e), 'error'); }
+  shBusy = false;
+  refreshShares();
+}
+$('shAll').onclick = async () => {
+  if (shBusy || !SH) return;
+  if (!SH.hasToken) return setStatus('shStatus', 'กรุณาบันทึก GitHub token ก่อน', 'error');
+  const todo = SH.albums.filter(a => a.count && (!a.shared || a.stale));
+  if (!todo.length) return setStatus('shStatus', 'ทุกอัลบั้มมีหน้าแชร์ล่าสุดแล้ว', 'ok');
+  shBusy = true;
+  let ok = 0, fail = 0;
+  for (const a of todo) {
+    setStatus('shStatus', 'กำลังสร้าง ' + (ok + fail + 1) + ' / ' + todo.length + ': ' + a.name);
+    try { await A('adminPublishShare', { eventId: a.id }); ok++; } catch (e) { fail++; }
+  }
+  shBusy = false;
+  setStatus('shStatus', 'สร้างแล้ว ' + ok + ' อัลบั้ม' + (fail ? ' · ไม่สำเร็จ ' + fail : '') + ' (รอ GitHub อัปเดตประมาณ 1 นาที)', fail ? 'error' : 'ok');
+  refreshShares();
+};
+$('tokSave').onclick = async () => {
+  const t = $('ghToken').value.trim();
+  if (!t) return setStatus('shStatus', 'กรุณาวาง token', 'error');
+  setStatus('shStatus', 'กำลังตรวจสอบ token…');
+  try { await A('adminSetGithubToken', { token: t }); $('ghToken').value = ''; setStatus('shStatus', 'บันทึก token แล้ว', 'ok'); refreshShares(); }
+  catch (e) { setStatus('shStatus', errMsg(e), 'error'); }
+};
 
 /* ---------- เปลี่ยนรหัสผ่าน ---------- */
 $('chPwBtn').onclick = async () => {

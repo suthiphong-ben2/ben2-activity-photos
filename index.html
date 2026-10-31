@@ -15,10 +15,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=4">
+<link rel="stylesheet" href="assets/style.css?v=5">
 <link rel="icon" type="image/png" href="favicon.png">
-<script src="config.js?v=4"></script>
-<script src="assets/common.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="assets/common.js?v=5"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -258,7 +258,9 @@ $('moreBtn').onclick = showMore;
 const SHARE_BASE = String(window.BEN2PH_SHARE_URL || (location.origin + location.pathname)).replace(/[?#].*$/, '');
 const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 let curAlbum = null;
-function albumLink(a) { return SHARE_BASE + '#e=' + encodeURIComponent(a.id); }
+const PAGES = String(window.BEN2PH_PAGES || SHARE_BASE);
+/** มีหน้าแชร์ (รูปปกขึ้นใน LINE) ใช้หน้านั้น ไม่มีใช้ลิงก์อัลบั้มปกติ */
+function albumLink(a) { return a.share ? PAGES + 'a/' + a.id + '.html' : SHARE_BASE + '#e=' + encodeURIComponent(a.id); }
 function albumText(a) {
   return '📷 ภาพกิจกรรม: ' + a.title + '\n' +
     [a.date ? '🗓 ' + a.date : '', a.count.toLocaleString('th-TH') + ' รูป'].filter(Boolean).join(' · ') + '\n' +

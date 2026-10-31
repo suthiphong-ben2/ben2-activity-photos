@@ -48,7 +48,7 @@ function doPost(e) {
 const API = {
   /* ---- ทุกคน ---- */
   events:   r => listEvents_(),
-  albums:   r => listEvents_().map(ev => Object.assign({}, ev, summary_(ev.id))),
+  albums:   r => listAlbums_(),
   photos:   r => listPhotos_(r.eventId),
   image:    r => getImage_(r.id, r.size),
   search:   r => search_(r.desc, r.threshold, r.eventId),
@@ -71,6 +71,9 @@ const API = {
   adminResetIndex: r => { requireAdmin_(r); return resetIndex_(r.eventId); },
   adminOptOuts:  r => { requireAdmin_(r); return readOptOut_().data.entries.map((e, i) => ({ i: i, at: e.at })); },
   adminRemoveOptOut: r => { requireAdmin_(r); return removeOptOut_(r.at); },
+  adminShareStatus: r => { requireAdmin_(r); return shareStatus_(); },
+  adminSetGithubToken: r => { requireAdmin_(r); return setGithubToken_(r.token); },
+  adminPublishShare: r => { requireAdmin_(r); return publishShare_(String(r.eventId || '')); },
   adminUploaders: r => { requireAdmin_(r); return listUploaders_().map(u => ({ name: u.name, at: u.at || '' })); },
   adminSetUploader: r => { requireAdmin_(r); return setUploader_(r.name, r.pin); },
   adminRemoveUploader: r => { requireAdmin_(r); return removeUploader_(r.name); },
@@ -349,6 +352,10 @@ function uploadPhoto_(r, who) {
   CacheService.getScriptCache().removeAll(['ph_' + ev.id, 'sum_' + ev.id]);
   let filtered = 0;
   if (Array.isArray(r.faces)) filtered = saveFaces_(ev.id, [{ id: file.getId(), name: name, faces: r.faces }]).filtered;
+  // อัลบั้มที่ยังไม่มีหน้าแชร์ LINE → สร้างให้อัตโนมัติจากรูปแรก
+  if (PROPS.getProperty('GITHUB_TOKEN') && !PROPS.getProperty('SH_' + ev.id)) {
+    try { publishShare_(ev.id); } catch (e) { console.warn('publishShare: ' + e); }
+  }
   return { id: file.getId(), skipped: false, filtered: filtered };
 }
 
@@ -557,6 +564,125 @@ function removeOptOut_(at) {
     if (oo.file && oo.data.entries.length !== n) writeOptOut_(oo.data, oo.file);
     return oo.data.entries.length !== n;
   } finally { lock.releaseLock(); }
+}
+
+/* ======================= หน้าแชร์ LINE (มีรูปปกแต่ละอัลบั้ม) ======================= */
+/*
+ * เก็บไฟล์ a/<รหัสอัลบั้ม>.html + a/<รหัสอัลบั้ม>.jpg ไว้ใน repo GitHub Pages
+ * LINE อ่าน og:image จากหน้านี้ แล้วหน้าพาผู้ใช้ต่อไปที่อัลบั้ม (#e=...)
+ * ต้องตั้ง GitHub token (fine-grained, เฉพาะ repo นี้, Contents: Read and write) ในหน้าผู้ดูแล
+ */
+const GH_REPO_DEFAULT = 'suthiphong-ben2/ben2-activity-photos';
+const SITE_DEFAULT = 'https://suthiphong-ben2.github.io/ben2-activity-photos/';
+
+function ghRepo_() { return PROPS.getProperty('GITHUB_REPO') || GH_REPO_DEFAULT; }
+function siteUrl_() { return PROPS.getProperty('SITE_URL') || SITE_DEFAULT; }
+
+function gh_(method, path, body) {
+  const token = PROPS.getProperty('GITHUB_TOKEN');
+  if (!token) throw new Error('ยังไม่ได้ตั้ง GitHub token');
+  const opt = {
+    method: method,
+    headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    muteHttpExceptions: true
+  };
+  if (body) { opt.contentType = 'application/json'; opt.payload = JSON.stringify(body); }
+  const res = UrlFetchApp.fetch('https://api.github.com/repos/' + ghRepo_() + path, opt);
+  const code = res.getResponseCode();
+  const text = res.getContentText();
+  return { code: code, json: text ? JSON.parse(text) : null };
+}
+
+function ghPut_(path, base64, message) {
+  const cur = gh_('get', '/contents/' + path + '?ref=main');
+  const body = { message: message, content: base64, branch: 'main' };
+  if (cur.code === 200 && cur.json && cur.json.sha) body.sha = cur.json.sha;
+  const res = gh_('put', '/contents/' + path, body);
+  if (res.code !== 200 && res.code !== 201) {
+    throw new Error('บันทึกไป GitHub ไม่สำเร็จ (' + res.code + '): ' + ((res.json && res.json.message) || ''));
+  }
+}
+
+function setGithubToken_(token) {
+  token = String(token || '').trim();
+  if (!token) { PROPS.deleteProperty('GITHUB_TOKEN'); return { ok: true, cleared: true }; }
+  const res = UrlFetchApp.fetch('https://api.github.com/repos/' + ghRepo_(), {
+    headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' }, muteHttpExceptions: true
+  });
+  if (res.getResponseCode() !== 200) throw new Error('token ใช้กับ repo ' + ghRepo_() + ' ไม่ได้ (' + res.getResponseCode() + ')');
+  const perm = (JSON.parse(res.getContentText()).permissions) || {};
+  if (perm.push === false) throw new Error('token นี้ไม่มีสิทธิ์เขียน repo (ต้องเลือก Contents: Read and write)');
+  PROPS.setProperty('GITHUB_TOKEN', token);
+  return { ok: true };
+}
+
+function esc_(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const TH_MON_ = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+function splitName_(name) {
+  const m = /^(25\d\d)-(\d\d)-(\d\d)\s+(.*)$/.exec(name || '');
+  if (!m) return { date: '', title: name || '' };
+  return { date: (+m[3]) + ' ' + (TH_MON_[+m[2] - 1] || '') + ' ' + m[1], title: m[4] };
+}
+
+/** สร้าง/อัปเดตหน้าแชร์ของอัลบั้ม ใช้รูปปกปัจจุบัน */
+function publishShare_(eventId) {
+  const ev = assertEvent_(eventId);
+  CacheService.getScriptCache().remove('sum_' + ev.id);
+  const sum = summary_(ev.id);
+  if (!sum.cover) throw new Error('อัลบั้มนี้ยังไม่มีรูป');
+  const meta = Drive.Files.get(sum.cover, { fields: 'thumbnailLink', supportsAllDrives: true });
+  if (!meta.thumbnailLink) throw new Error('รูปปกยังไม่มีภาพย่อ ลองใหม่อีกครั้งในอีกสักครู่');
+  const img = UrlFetchApp.fetch(meta.thumbnailLink.replace(/=s\d+(-[a-z0-9-]+)?$/i, '=s1200'), {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true
+  });
+  if (img.getResponseCode() !== 200) throw new Error('ดึงรูปปกไม่สำเร็จ');
+
+  const site = siteUrl_();
+  const s = splitName_(ev.name);
+  const target = site + '#e=' + encodeURIComponent(ev.id);
+  const desc = [s.date, 'ดูและดาวน์โหลดรูปกิจกรรม', 'โรงเรียนเบญจมราชรังสฤษฎิ์ ๒'].filter(String).join(' · ');
+  const v = Date.now().toString(36);
+  const html = '<!doctype html>\n<html lang="th"><head><meta charset="utf-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+    '<title>' + esc_(s.title) + ' · ภาพกิจกรรม โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</title>\n' +
+    '<meta name="description" content="' + esc_(desc) + '">\n' +
+    '<meta property="og:type" content="website">\n' +
+    '<meta property="og:site_name" content="ภาพกิจกรรม โรงเรียนเบญจมราชรังสฤษฎิ์ ๒">\n' +
+    '<meta property="og:title" content="' + esc_(s.title) + '">\n' +
+    '<meta property="og:description" content="' + esc_(desc) + '">\n' +
+    '<meta property="og:image" content="' + esc_(site + 'a/' + ev.id + '.jpg?v=' + v) + '">\n' +
+    '<meta property="og:url" content="' + esc_(site + 'a/' + ev.id + '.html') + '">\n' +
+    '<meta name="twitter:card" content="summary_large_image">\n' +
+    '<meta http-equiv="refresh" content="0; url=' + esc_(target) + '">\n' +
+    '<script>location.replace(' + JSON.stringify(target) + ')</script>\n' +
+    '</head><body style="font-family:sans-serif;padding:24px"><a href="' + esc_(target) + '">เปิดอัลบั้ม ' + esc_(s.title) + '</a></body></html>\n';
+
+  ghPut_('a/' + ev.id + '.jpg', Utilities.base64Encode(img.getBlob().getBytes()), 'ปกอัลบั้ม: ' + s.title);
+  ghPut_('a/' + ev.id + '.html', Utilities.base64Encode(html, Utilities.Charset.UTF_8), 'หน้าแชร์: ' + s.title);
+  PROPS.setProperty('SH_' + ev.id, sum.cover);
+  return { url: site + 'a/' + ev.id + '.html', cover: sum.cover };
+}
+
+/** อัลบั้มทั้งหมด + จำนวนรูป + ปก + มีหน้าแชร์แล้วหรือยัง */
+function listAlbums_() {
+  const props = PROPS.getProperties();
+  return listEvents_().map(ev => Object.assign({}, ev, summary_(ev.id), { share: !!props['SH_' + ev.id] }));
+}
+
+function shareStatus_() {
+  const props = PROPS.getProperties();
+  return {
+    hasToken: !!props.GITHUB_TOKEN,
+    repo: ghRepo_(),
+    albums: listEvents_().map(ev => {
+      const sum = summary_(ev.id);
+      const pub = props['SH_' + ev.id] || '';
+      return { id: ev.id, name: ev.name, count: sum.count, shared: !!pub, stale: !!pub && pub !== sum.cover };
+    })
+  };
 }
 
 /* ======================= ติดตั้งครั้งแรก ======================= */
