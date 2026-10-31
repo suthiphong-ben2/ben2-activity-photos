@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ผู้ดูแล · ภาพกิจกรรม โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" type="image/png" href="favicon.png">
+<script src="config.js"></script>
+<script src="assets/common.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <img src="logo.png" alt="ตราโรงเรียนเบญจมราชรังสฤษฎิ์ ๒" class="logo" width="36" height="48">
+  <div class="ttl">
+    <h1>ผู้ดูแลระบบภาพกิจกรรม</h1>
+    <span class="term">โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</span>
+  </div>
+  <a class="admin-link ghost" href="upload.html">อัปโหลดรูป</a>
+  <a class="admin-link" href="index.html">หน้าภาพกิจกรรม</a>
+</div></header>
+
+<div class="wrap">
+  <main style="padding-top:16px">
+    <!-- ตั้งรหัสผ่านครั้งแรก -->
+    <section id="setupBox" class="box" hidden>
+      <h2>ตั้งรหัสผ่านผู้ดูแล (ครั้งแรก)</h2>
+      <p class="note">ระบบยังไม่มีรหัสผ่านผู้ดูแล ตั้งได้ครั้งเดียวที่หน้านี้ (อย่างน้อย 8 ตัวอักษร) หลังจากนั้นเปลี่ยนได้หลังเข้าสู่ระบบ</p>
+      <div class="row" style="margin-top:8px">
+        <label class="field"><span class="lbl">รหัสผ่านใหม่</span><input type="password" id="newPw1" autocomplete="new-password"></label>
+        <label class="field"><span class="lbl">ยืนยันรหัสผ่าน</span><input type="password" id="newPw2" autocomplete="new-password"></label>
+        <button id="setupBtn" class="btn primary">ตั้งรหัสผ่าน</button>
+      </div>
+      <p id="setupStatus" class="status"></p>
+    </section>
+
+    <!-- เข้าสู่ระบบ -->
+    <section id="loginBox" class="box" hidden>
+      <h2>เข้าสู่ระบบผู้ดูแล</h2>
+      <div class="row" style="margin-top:8px">
+        <label class="field grow"><span class="lbl">รหัสผ่าน</span><input type="password" id="pw" autocomplete="current-password"></label>
+        <button id="loginBtn" class="btn primary">เข้าสู่ระบบ</button>
+      </div>
+      <p id="loginStatus" class="status"></p>
+    </section>
+
+    <div id="adminArea" hidden>
+      <nav class="tabs" role="tablist" aria-label="เมนูผู้ดูแล" style="padding-top:0">
+        <button role="tab" data-tab="index" aria-selected="true">กิจกรรมและดัชนีใบหน้า</button>
+        <button role="tab" data-tab="up" aria-selected="false">ผู้อัปโหลด</button>
+        <button role="tab" data-tab="oo" aria-selected="false">คำขอไม่ให้ค้นเจอหน้า</button>
+        <button role="tab" data-tab="pw" aria-selected="false">รหัสผ่าน</button>
+      </nav>
+
+      <!-- ดัชนี -->
+      <section id="tab-index">
+        <div class="box">
+          <h2>กิจกรรมและดัชนีใบหน้า</h2>
+          <p class="note">รูปที่อัปโหลดผ่านหน้า "อัปโหลดรูป" ทำดัชนีให้อัตโนมัติ ส่วนรูปที่นำเข้าโฟลเดอร์ใน Google Drive โดยตรง
+            ให้กด "สร้าง/อัปเดตดัชนี" ระบบจะประมวลผลเฉพาะรูปที่ยังไม่มีในดัชนี (ทำบนเครื่องนี้ ห้ามปิดหน้าจนกว่าจะเสร็จ)</p>
+          <div class="scroll" style="margin-top:10px">
+            <table class="tbl">
+              <thead><tr><th>กิจกรรม</th><th>รูปในดัชนี</th><th>ใบหน้า</th><th>อัปเดตล่าสุด</th><th></th></tr></thead>
+              <tbody id="evRows"><tr><td colspan="5" class="loading">กำลังโหลด…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="box">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <b id="jobTitle">ยังไม่มีงานที่กำลังทำ</b>
+            <button id="stopBtn" class="btn danger small" hidden>หยุด</button>
+          </div>
+          <div class="bar"><div id="barFill"></div></div>
+          <p id="jobStatus" class="status"></p>
+          <pre id="log" class="log"></pre>
+        </div>
+      </section>
+
+      <!-- ผู้อัปโหลด -->
+      <section id="tab-up" hidden>
+        <div class="box">
+          <h2>ผู้อัปโหลด (ครูโสตฯ / ผู้ถ่ายภาพ)</h2>
+          <p class="note">เพิ่มชื่อและตั้ง PIN ตัวเลขอย่างน้อย 6 หลัก แล้วแจ้ง PIN ให้เจ้าของชื่อทราบ
+            ใส่ชื่อเดิมพร้อม PIN ใหม่ = เปลี่ยน PIN · ระบบไม่เก็บ PIN จริง เก็บเฉพาะค่าที่เข้ารหัสแล้ว</p>
+          <div class="row" style="margin-top:8px">
+            <label class="field grow"><span class="lbl">ชื่อ</span><input type="text" id="upName" maxlength="60" placeholder="เช่น ครูสมชาย (โสตฯ)"></label>
+            <label class="field"><span class="lbl">PIN</span><input type="text" id="upPin" inputmode="numeric" maxlength="12" autocomplete="off"></label>
+            <button id="upAdd" class="btn primary">บันทึก</button>
+          </div>
+          <p id="upStatus" class="status"></p>
+          <table class="tbl"><thead><tr><th>ชื่อ</th><th>ตั้ง/เปลี่ยน PIN เมื่อ</th><th></th></tr></thead><tbody id="upRows"></tbody></table>
+        </div>
+      </section>
+
+      <!-- opt-out -->
+      <section id="tab-oo" hidden>
+        <div class="box">
+          <h2>คำขอไม่ให้ค้นเจอหน้า</h2>
+          <p class="note">ใบหน้าตามคำขอถูกลบออกจากดัชนีแล้ว และจะถูกกรองออกเมื่ออัปโหลดหรือทำดัชนีใหม่
+            ลบคำขอ = ให้ค้นเจอได้อีก (รูปเดิมจะค้นเจอเมื่อกด "ล้าง" แล้วสร้างดัชนีกิจกรรมนั้นใหม่)</p>
+          <table class="tbl"><thead><tr><th>#</th><th>วันที่ขอ</th><th></th></tr></thead><tbody id="ooRows"></tbody></table>
+          <p id="ooStatus" class="status"></p>
+        </div>
+      </section>
+
+      <!-- รหัสผ่าน -->
+      <section id="tab-pw" hidden>
+        <div class="box">
+          <h2>เปลี่ยนรหัสผ่านผู้ดูแล</h2>
+          <div class="row" style="margin-top:8px">
+            <label class="field"><span class="lbl">รหัสผ่านใหม่</span><input type="password" id="chPw1" autocomplete="new-password"></label>
+            <label class="field"><span class="lbl">ยืนยันรหัสผ่าน</span><input type="password" id="chPw2" autocomplete="new-password"></label>
+            <button id="chPwBtn" class="btn primary">เปลี่ยนรหัสผ่าน</button>
+            <button id="logoutBtn" class="btn ghost">ออกจากระบบ</button>
+          </div>
+          <p id="chPwStatus" class="status"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<footer class="credit"><div class="wrap">พัฒนาระบบโดย <b>ครูสุทธิพงษ์ สุขสร้อย</b> · โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</div></footer>
+
+<script>
+const { $, api, loadModels, facesOf, loadImage, setStatus, errMsg, splitEvent, reportHeight } = BEN2;
+const SAVE_EVERY = 15;
+const INDEX_SIZE = 1280;
+let PW = '';
+let busy = false, stopFlag = false;
+const A = (action, body) => api(action, Object.assign({ password: PW }, body || {}));
+
+reportHeight();
+try { PW = sessionStorage.getItem('ben2ph-admin') || ''; } catch (e) {}
+
+/* ---------- เข้าสู่ระบบ / ตั้งรหัสครั้งแรก ---------- */
+(async () => {
+  try {
+    const st = await api('adminStatus');
+    if (!st.hasPassword) { $('setupBox').hidden = false; return; }
+    if (PW) return login(true);
+    $('loginBox').hidden = false;
+  } catch (e) {
+    $('loginBox').hidden = false;
+    setStatus('loginStatus', 'เชื่อมต่อระบบไม่ได้: ' + errMsg(e), 'error');
+  }
+})();
+
+$('setupBtn').onclick = async () => {
+  const a = $('newPw1').value, b = $('newPw2').value;
+  if (a.length < 8) return setStatus('setupStatus', 'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร', 'error');
+  if (a !== b) return setStatus('setupStatus', 'รหัสผ่านสองช่องไม่ตรงกัน', 'error');
+  try {
+    await api('adminSetup', { newPassword: a });
+    PW = a;
+    $('setupBox').hidden = true;
+    login(false);
+  } catch (e) { setStatus('setupStatus', errMsg(e), 'error'); }
+};
+
+$('loginBtn').onclick = () => { PW = $('pw').value; login(false); };
+$('pw').onkeydown = e => { if (e.key === 'Enter') $('loginBtn').click(); };
+
+async function login(silent) {
+  if (!PW) return setStatus('loginStatus', 'กรุณาใส่รหัสผ่าน', 'error');
+  if (!silent) setStatus('loginStatus', 'กำลังตรวจสอบ…');
+  try {
+    await A('adminLogin');
+    try { sessionStorage.setItem('ben2ph-admin', PW); } catch (e) {}
+    $('loginBox').hidden = true;
+    $('adminArea').hidden = false;
+    refreshEvents(); refreshUploaders(); refreshOptOuts();
+    loadModels().catch(() => {});
+  } catch (e) {
+    PW = '';
+    try { sessionStorage.removeItem('ben2ph-admin'); } catch (_) {}
+    $('loginBox').hidden = false;
+    setStatus('loginStatus', errMsg(e), 'error');
+  }
+}
+$('logoutBtn').onclick = () => {
+  try { sessionStorage.removeItem('ben2ph-admin'); } catch (e) {}
+  location.reload();
+};
+
+document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  ['index', 'up', 'oo', 'pw'].forEach(n => $('tab-' + n).hidden = n !== b.dataset.tab);
+});
+
+function btn(label, kind, fn) {
+  const b = document.createElement('button');
+  b.className = 'btn small ' + kind;
+  b.textContent = label;
+  b.onclick = fn;
+  return b;
+}
+const th = iso => iso ? new Date(iso).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '–';
+
+/* ---------- กิจกรรม + ดัชนี ---------- */
+function log(msg) {
+  $('log').textContent += '[' + new Date().toLocaleTimeString('th-TH') + '] ' + msg + '\n';
+  $('log').scrollTop = $('log').scrollHeight;
+}
+async function refreshEvents() {
+  try {
+    const list = await A('adminEvents');
+    const tb = $('evRows');
+    tb.innerHTML = '';
+    if (!list.length) { tb.innerHTML = '<tr><td colspan="5" class="empty">ยังไม่มีกิจกรรม — อัปโหลดรูปจากหน้า "อัปโหลดรูป" หรือสร้างโฟลเดอร์ใน Drive</td></tr>'; return; }
+    for (const ev of list) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td></td><td class="num"></td><td class="num"></td><td></td><td><div class="actions"></div></td>';
+      tr.cells[0].textContent = ev.name;
+      tr.cells[1].textContent = ev.indexed;
+      tr.cells[2].textContent = ev.faces;
+      tr.cells[3].textContent = th(ev.updated);
+      tr.querySelector('.actions').append(
+        btn('สร้าง/อัปเดตดัชนี', 'primary', () => build(ev)),
+        btn('ล้าง', 'danger', () => reset(ev)));
+      tb.appendChild(tr);
+    }
+    setBusy(busy);
+  } catch (e) { log('โหลดรายการกิจกรรมไม่สำเร็จ: ' + errMsg(e)); }
+}
+function setBusy(v) {
+  busy = v;
+  document.querySelectorAll('#evRows button').forEach(b => b.disabled = v);
+  $('stopBtn').hidden = !v; $('stopBtn').disabled = false;
+}
+$('stopBtn').onclick = () => { stopFlag = true; $('stopBtn').disabled = true; };
+window.addEventListener('beforeunload', e => { if (busy) { e.preventDefault(); e.returnValue = ''; } });
+
+function progress(done, total) {
+  $('barFill').style.width = total ? (done / total * 100).toFixed(1) + '%' : '0';
+  $('jobStatus').textContent = done + ' / ' + total + ' รูป';
+}
+async function fetchImg(ph) {
+  try { return { ph, img: await loadImage(await A('image', { id: ph.id, size: INDEX_SIZE })) }; }
+  catch (e) { return { ph, err: e }; }
+}
+async function build(ev) {
+  if (busy) return;
+  stopFlag = false; setBusy(true);
+  $('jobTitle').textContent = 'กำลังทำดัชนี: ' + ev.name;
+  progress(0, 0);
+  const t0 = Date.now();
+  try {
+    log('เริ่ม: ' + ev.name + ' · กำลังโหลดตัวตรวจจับใบหน้า…');
+    await loadModels();
+    const p = await A('adminPending', { eventId: ev.id });
+    log('รูปทั้งหมด ' + p.total + ' · ต้องประมวลผล ' + p.pending.length + (p.pruned ? ' · ลบรายการรูปที่ไม่อยู่แล้ว ' + p.pruned : ''));
+    const n = p.pending.length;
+    let done = 0, faces = 0, skipped = 0, filtered = 0, batch = [];
+    const save = async () => { const r = await A('adminSaveBatch', { eventId: ev.id, entries: batch }); filtered += r.filtered; batch = []; };
+    let next = n ? fetchImg(p.pending[0]) : null;
+    for (let i = 0; i < n && !stopFlag; i++) {
+      const cur = await next;
+      next = i + 1 < n ? fetchImg(p.pending[i + 1]) : null;
+      if (cur.err) { skipped++; log('ข้าม ' + cur.ph.name + ': ' + errMsg(cur.err)); }
+      else {
+        const f = await facesOf(cur.img);
+        batch.push({ id: cur.ph.id, name: cur.ph.name, faces: f });
+        faces += f.length;
+      }
+      done++;
+      progress(done, n);
+      if (batch.length >= SAVE_EVERY) await save();
+    }
+    if (batch.length) await save();
+    if (filtered) log('กรองใบหน้าของผู้ขอไม่ให้ค้นเจอออก ' + filtered + ' ใบหน้า');
+    const sec = Math.round((Date.now() - t0) / 1000);
+    log(stopFlag ? 'หยุดที่ ' + done + '/' + n + ' รูป (กดสร้างดัชนีอีกครั้งเพื่อทำต่อ)'
+                 : 'เสร็จ: ' + done + ' รูป พบ ' + faces + ' ใบหน้า' + (skipped ? ' · ข้าม ' + skipped + ' รูป' : '') + ' · ' + sec + ' วินาที');
+  } catch (e) {
+    log('ผิดพลาด: ' + errMsg(e));
+  } finally {
+    $('jobTitle').textContent = 'ยังไม่มีงานที่กำลังทำ';
+    setBusy(false);
+    refreshEvents();
+  }
+}
+async function reset(ev) {
+  if (busy) return;
+  if (!confirm('ล้างดัชนีใบหน้าของ "' + ev.name + '" ?\nรูปใน Drive ไม่ถูกลบ แต่จะค้นหาด้วยใบหน้าในกิจกรรมนี้ไม่ได้จนกว่าจะสร้างดัชนีใหม่')) return;
+  try { await A('adminResetIndex', { eventId: ev.id }); log('ล้างดัชนี: ' + ev.name); }
+  catch (e) { log('ล้างไม่สำเร็จ: ' + errMsg(e)); }
+  refreshEvents();
+}
+
+/* ---------- ผู้อัปโหลด ---------- */
+async function refreshUploaders() {
+  try {
+    const list = await A('adminUploaders');
+    const tb = $('upRows');
+    tb.innerHTML = '';
+    if (!list.length) { tb.innerHTML = '<tr><td colspan="3" class="empty">ยังไม่มีผู้อัปโหลด</td></tr>'; return; }
+    for (const u of list) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td></td><td></td><td><div class="actions"></div></td>';
+      tr.cells[0].textContent = u.name;
+      tr.cells[1].textContent = th(u.at);
+      tr.querySelector('.actions').append(btn('ลบ', 'danger', async () => {
+        if (!confirm('ลบผู้อัปโหลด "' + u.name + '" ?')) return;
+        try { await A('adminRemoveUploader', { name: u.name }); refreshUploaders(); }
+        catch (e) { setStatus('upStatus', errMsg(e), 'error'); }
+      }));
+      tb.appendChild(tr);
+    }
+  } catch (e) { setStatus('upStatus', 'โหลดรายชื่อไม่สำเร็จ: ' + errMsg(e), 'error'); }
+}
+$('upAdd').onclick = async () => {
+  const name = $('upName').value.trim(), pin = $('upPin').value.trim();
+  if (!name) return setStatus('upStatus', 'กรุณาใส่ชื่อ', 'error');
+  if (!/^\d{6,}$/.test(pin)) return setStatus('upStatus', 'PIN ต้องเป็นตัวเลขอย่างน้อย 6 หลัก', 'error');
+  try {
+    await A('adminSetUploader', { name, pin });
+    setStatus('upStatus', 'บันทึกแล้ว: ' + name, 'ok');
+    $('upName').value = ''; $('upPin').value = '';
+    refreshUploaders();
+  } catch (e) { setStatus('upStatus', errMsg(e), 'error'); }
+};
+
+/* ---------- คำขอไม่ให้ค้นเจอหน้า ---------- */
+async function refreshOptOuts() {
+  try {
+    const list = await A('adminOptOuts');
+    const tb = $('ooRows');
+    tb.innerHTML = '';
+    if (!list.length) { tb.innerHTML = '<tr><td colspan="3" class="empty">ยังไม่มีคำขอ</td></tr>'; return; }
+    list.forEach((o, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td class="num"></td><td></td><td><div class="actions"></div></td>';
+      tr.cells[0].textContent = i + 1;
+      tr.cells[1].textContent = th(o.at);
+      tr.querySelector('.actions').append(btn('ลบคำขอ', 'danger', async () => {
+        if (!confirm('ลบคำขอนี้? ระบบจะค้นเจอหน้าบุคคลนี้ได้อีกครั้ง')) return;
+        try { await A('adminRemoveOptOut', { at: o.at }); refreshOptOuts(); }
+        catch (e) { setStatus('ooStatus', errMsg(e), 'error'); }
+      }));
+      tb.appendChild(tr);
+    });
+  } catch (e) { setStatus('ooStatus', 'โหลดคำขอไม่สำเร็จ: ' + errMsg(e), 'error'); }
+}
+
+/* ---------- เปลี่ยนรหัสผ่าน ---------- */
+$('chPwBtn').onclick = async () => {
+  const a = $('chPw1').value, b = $('chPw2').value;
+  if (a.length < 8) return setStatus('chPwStatus', 'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร', 'error');
+  if (a !== b) return setStatus('chPwStatus', 'รหัสผ่านสองช่องไม่ตรงกัน', 'error');
+  try {
+    await A('adminPassword', { newPassword: a });
+    PW = a;
+    try { sessionStorage.setItem('ben2ph-admin', PW); } catch (e) {}
+    $('chPw1').value = ''; $('chPw2').value = '';
+    setStatus('chPwStatus', 'เปลี่ยนรหัสผ่านแล้ว', 'ok');
+  } catch (e) { setStatus('chPwStatus', errMsg(e), 'error'); }
+};
+</script>
+</body>
+</html>

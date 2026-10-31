@@ -1,0 +1,107 @@
+/* ธีมเดียวกับระบบตารางเรียน / ปฏิทิน / จองห้อง (น้ำเงิน-เหลือง) */
+:root{
+  --bg:#F2F5FB; --surface:#FFFFFF; --sunk:#E7ECF6; --line:#D2DAEA; --fg:#111A33; --muted:#56617D;
+  --accent:#1D3F9A; --accent-fg:#FFFFFF; --brand:#16337F; --brand-2:#1D3F9A; --brand-fg:#FFFFFF;
+  --gold:#E2B33C; --gold-ink:#7A5A00; --ok:#0F7A4A; --danger:#B42318;
+  --font-d:"Chakra Petch","IBM Plex Sans Thai",system-ui,sans-serif;
+  --font-b:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  --r:8px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-b);font-size:15px;line-height:1.5}
+[hidden]{display:none!important}
+img{max-width:100%}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{background:linear-gradient(100deg,var(--brand),var(--brand-2));color:var(--brand-fg);border-bottom:4px solid var(--gold)}
+header.top .wrap{display:flex;align-items:center;gap:12px;padding-block:12px}
+.logo{height:48px;width:auto;flex:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.ttl{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+h1{font-family:var(--font-d);font-size:20px;font-weight:700;margin:0;letter-spacing:.01em;line-height:1.3;text-wrap:balance}
+.term{color:color-mix(in oklab,var(--brand-fg) 78%,transparent);font-size:14px}
+.term b{color:var(--gold);font-weight:600}
+.nowrap{white-space:nowrap}
+.admin-link{margin-left:auto;font-size:13px;font-weight:600;color:var(--brand);background:var(--gold);text-decoration:none;border-radius:999px;padding:6px 14px;white-space:nowrap}
+.admin-link.ghost{background:transparent;color:var(--brand-fg);border:1px solid color-mix(in oklab,var(--brand-fg) 55%,transparent)}
+.admin-link+.admin-link{margin-left:0}
+@media (max-width:600px){h1{font-size:17px}.logo{height:40px}.admin-link{padding:5px 10px}}
+
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;padding-block:12px}
+nav.tabs button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:7px 14px;border-radius:999px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);box-shadow:inset 0 -3px 0 var(--gold)}
+nav.tabs button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+main{padding-bottom:40px;display:flex;flex-direction:column;gap:14px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.box h2{margin:0 0 6px;font-family:var(--font-d);font-size:20px;line-height:1.25}
+.box h3{margin:0 0 8px;font-family:var(--font-d);font-size:17px}
+.row{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:200px}
+.field.grow{flex:1}
+label.lbl,.lbl{font-size:12px;color:var(--muted);letter-spacing:.04em;font-weight:500}
+input[type=text],input[type=password],input[type=date],input[type=search],input[type=number],select{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.note{font-size:13px;color:var(--muted);max-width:80ch;margin:6px 0 0}
+.status{margin:10px 0 0;font-weight:600;min-height:1.5em}
+.status.error{color:var(--danger)}
+.status.ok{color:var(--ok)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:600;padding:9px 18px;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.primary{background:var(--accent);color:var(--accent-fg);box-shadow:inset 0 -3px 0 var(--gold)}
+.btn.ghost{background:var(--surface);color:var(--fg);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn.danger{background:transparent;color:var(--danger);border-color:color-mix(in oklab,var(--danger) 50%,transparent)}
+.btn.small{padding:5px 12px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+.pick{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px}
+.pick img{width:88px;height:88px;object-fit:cover;border-radius:50%;border:3px solid var(--gold)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+@media (max-width:600px){.grid{grid-template-columns:repeat(3,1fr);gap:4px}}
+.tile{position:relative;padding:0;border:0;border-radius:6px;overflow:hidden;cursor:pointer;background:var(--sunk);aspect-ratio:1}
+.tile img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s;display:block}
+.tile img.loaded{opacity:1}
+.tile.err::after{content:'โหลดไม่ได้';position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.cap{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:12px;text-align:left;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.7));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap:empty{display:none}
+.more-wrap{display:flex;justify-content:center;padding:14px 0}
+
+.lb{position:fixed;inset:0;background:rgba(8,12,24,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;z-index:20}
+.lb img{max-width:100%;max-height:calc(100vh - 120px);border-radius:6px;opacity:0;transition:opacity .2s}
+.lb img.loaded{opacity:1}
+.lb-bar{display:flex;align-items:center;gap:10px;margin-top:12px;color:#fff;flex-wrap:wrap;justify-content:center}
+.lb-bar span{font-size:14px;opacity:.85;word-break:break-all}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);font-size:28px;line-height:1;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:999px;width:48px;height:48px;cursor:pointer}
+.lb-nav.prev{left:12px}.lb-nav.next{right:12px}
+
+table.tbl{border-collapse:collapse;width:100%}
+.tbl th,.tbl td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl th{font-size:12px;color:var(--muted);font-weight:600}
+.tbl td.num{font-variant-numeric:tabular-nums}
+.tbl .actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.scroll{overflow-x:auto}
+.bar{height:10px;background:var(--sunk);border-radius:999px;overflow:hidden;margin:10px 0}
+.bar>div{height:100%;width:0;background:var(--accent);transition:width .2s}
+.log{font-family:ui-monospace,monospace;font-size:12.5px;background:#0E1630;color:#D5DBE5;border-radius:6px;padding:10px;max-height:260px;overflow:auto;white-space:pre-wrap;margin:0}
+.log:empty{display:none}
+.empty{color:var(--muted);padding:30px 10px;text-align:center}
+.loading{padding:40px 10px;text-align:center;color:var(--muted)}
+.pill{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--sunk);color:var(--muted)}
+.pill.ok{background:color-mix(in oklab,var(--ok) 14%,var(--surface));color:var(--ok)}
+.pill.err{background:color-mix(in oklab,var(--danger) 12%,var(--surface));color:var(--danger)}
+
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:26px 16px;text-align:center;background:var(--bg);cursor:pointer}
+.drop.over{border-color:var(--accent);background:color-mix(in oklab,var(--accent) 8%,var(--bg))}
+.drop b{font-family:var(--font-d);font-size:17px}
+.qlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin-top:12px}
+.qitem{position:relative;border-radius:6px;overflow:hidden;background:var(--sunk);aspect-ratio:1}
+.qitem img{width:100%;height:100%;object-fit:cover;display:block}
+.qitem .st{position:absolute;left:4px;bottom:4px;font-size:11px;padding:1px 6px;border-radius:999px;background:rgba(0,0,0,.65);color:#fff}
+.qitem.done .st{background:var(--ok)}
+.qitem.err .st{background:var(--danger)}
+
+footer.credit{margin-top:28px;padding:14px 0 18px;border-top:3px solid var(--gold);background:var(--brand);color:#C9D4F2;font-size:13px;text-align:center}
+footer.credit b{color:var(--gold);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}

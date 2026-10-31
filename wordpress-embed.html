@@ -1,0 +1,13 @@
+<!-- วางในบล็อก "HTML ที่กำหนดเอง" ของหน้า WordPress (แนะนำเทมเพลต Elementor Full Width) -->
+<iframe id="ben2ph-frame" src="https://suthiphong-ben2.github.io/ben2-activity-photos/" title="ภาพกิจกรรม โรงเรียนเบญจมราชรังสฤษฎิ์ ๒"
+  allow="camera" style="width:100%;height:900px;border:0;display:block" loading="lazy"></iframe>
+<script>
+  // ปรับความสูงของกรอบตามเนื้อหา และส่งลิงก์ #e=กิจกรรม ให้แชร์ต่อได้
+  (function () {
+    var f = document.getElementById('ben2ph-frame');
+    if (location.hash) f.src = f.src.split('#')[0] + location.hash;
+    window.addEventListener('message', function (e) {
+      if (e.source === f.contentWindow && e.data && e.data.ben2ph) f.style.height = Math.max(600, e.data.height + 20) + 'px';
+    });
+  })();
+</script>

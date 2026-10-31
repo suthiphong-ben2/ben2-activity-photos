@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>อัปโหลดภาพกิจกรรม โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" type="image/png" href="favicon.png">
+<script src="config.js"></script>
+<script src="assets/common.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <img src="logo.png" alt="ตราโรงเรียนเบญจมราชรังสฤษฎิ์ ๒" class="logo" width="36" height="48">
+  <div class="ttl">
+    <h1>อัปโหลดภาพกิจกรรม</h1>
+    <span class="term">สำหรับครูโสตฯ / ผู้ถ่ายภาพ · <b id="who">ยังไม่ได้เข้าสู่ระบบ</b></span>
+  </div>
+  <a class="admin-link ghost" href="index.html">หน้าภาพกิจกรรม</a>
+</div></header>
+
+<div class="wrap">
+  <main style="padding-top:16px">
+    <!-- เข้าสู่ระบบ -->
+    <section id="loginBox" class="box">
+      <h2>เข้าสู่ระบบผู้อัปโหลด</h2>
+      <div class="row" style="margin-top:8px">
+        <label class="field grow"><span class="lbl">ชื่อ</span>
+          <select id="upName"><option value="">กำลังโหลดรายชื่อ…</option></select>
+        </label>
+        <label class="field"><span class="lbl">PIN</span>
+          <input type="password" id="upPin" inputmode="numeric" autocomplete="current-password">
+        </label>
+        <button id="loginBtn" class="btn primary">เข้าสู่ระบบ</button>
+      </div>
+      <p class="note">ยังไม่มีชื่อหรือลืม PIN ให้ติดต่อผู้ดูแลระบบ</p>
+      <p id="loginStatus" class="status"></p>
+    </section>
+
+    <section id="work" hidden>
+      <!-- 1. กิจกรรม -->
+      <div class="box">
+        <h2>1. เลือกกิจกรรม</h2>
+        <div class="row" style="margin-top:8px">
+          <label><input type="radio" name="mode" value="new" checked> กิจกรรมใหม่</label>
+          <label><input type="radio" name="mode" value="old"> เพิ่มรูปในกิจกรรมเดิม</label>
+        </div>
+        <div id="newEv" class="row" style="margin-top:10px">
+          <label class="field"><span class="lbl">วันที่จัดกิจกรรม</span><input type="date" id="evDate"></label>
+          <label class="field grow"><span class="lbl">ชื่อกิจกรรม</span><input type="text" id="evTitle" maxlength="150" placeholder="เช่น กีฬาสีภายใน ปีการศึกษา 2569"></label>
+        </div>
+        <div id="oldEv" class="row" style="margin-top:10px" hidden>
+          <label class="field grow"><span class="lbl">กิจกรรม</span><select id="evSelect"></select></label>
+        </div>
+      </div>
+
+      <!-- 2. รูป -->
+      <div class="box">
+        <h2>2. เลือกรูป</h2>
+        <label id="drop" class="drop" style="display:block;margin-top:8px">
+          <input type="file" id="files" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple hidden>
+          <b>ลากรูปมาวางที่นี่ หรือกดเพื่อเลือกรูป</b>
+          <div class="note" style="margin:6px auto 0">เลือกได้ครั้งละหลายร้อยรูป · JPG PNG WEBP HEIC · ไฟล์ละไม่เกิน 25 MB (ใหญ่กว่านี้ระบบย่อให้)</div>
+        </label>
+        <div class="row" style="margin-top:12px;justify-content:space-between">
+          <span id="qInfo" class="lbl">ยังไม่ได้เลือกรูป</span>
+          <span class="row" style="gap:8px">
+            <button id="clearBtn" class="btn ghost small" hidden>ล้างรายการ</button>
+            <button id="startBtn" class="btn primary" disabled>อัปโหลด</button>
+          </span>
+        </div>
+        <div class="bar"><div id="barFill"></div></div>
+        <p id="upStatus" class="status"></p>
+        <div id="qlist" class="qlist"></div>
+      </div>
+      <p class="note">ระหว่างอัปโหลด ระบบจะหาใบหน้าในแต่ละรูปบนเครื่องนี้แล้วทำดัชนีให้ทันที ห้ามปิดหน้านี้จนกว่าจะเสร็จ
+        ถ้าเน็ตหลุด เลือกรูปชุดเดิมแล้วกดอัปโหลดอีกครั้ง ระบบจะข้ามรูปที่อัปโหลดแล้ว</p>
+    </section>
+  </main>
+</div>
+
+<footer class="credit"><div class="wrap">พัฒนาระบบโดย <b>ครูสุทธิพงษ์ สุขสร้อย</b> · โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</div></footer>
+
+<script>
+const { $, api, loadModels, facesOf, loadImage, resizeFile, fileToBase64, setStatus, errMsg, splitEvent, reportHeight } = BEN2;
+const MAX_BYTES = 24 * 1024 * 1024;
+const DETECT_SIZE = 1280;
+const CONCURRENT = 2;
+let CRED = null;          // { uploader, pin }
+let ITEMS = [];           // { file, el, state }
+let busy = false;
+
+reportHeight();
+try { CRED = JSON.parse(sessionStorage.getItem('ben2ph-up') || 'null'); } catch (e) {}
+
+/* ---------- เข้าสู่ระบบ ---------- */
+(async () => {
+  try {
+    const names = await api('uploaders');
+    $('upName').innerHTML = '';
+    if (!names.length) $('upName').add(new Option('ยังไม่มีผู้อัปโหลด — ให้ผู้ดูแลเพิ่มชื่อก่อน', ''));
+    else { $('upName').add(new Option('เลือกชื่อ', '')); names.forEach(n => $('upName').add(new Option(n, n))); }
+  } catch (e) {
+    setStatus('loginStatus', 'โหลดรายชื่อไม่สำเร็จ: ' + errMsg(e), 'error');
+  }
+  if (CRED) login(CRED, true);
+})();
+
+$('loginBtn').onclick = () => login({ uploader: $('upName').value, pin: $('upPin').value.trim() });
+$('upPin').onkeydown = e => { if (e.key === 'Enter') $('loginBtn').click(); };
+
+async function login(c, silent) {
+  if (!c.uploader || !c.pin) return setStatus('loginStatus', 'กรุณาเลือกชื่อและใส่ PIN', 'error');
+  $('loginBtn').disabled = true;
+  if (!silent) setStatus('loginStatus', 'กำลังตรวจสอบ…');
+  try {
+    const r = await api('uploaderLogin', c);
+    CRED = c;
+    try { sessionStorage.setItem('ben2ph-up', JSON.stringify(c)); } catch (e) {}
+    $('who').textContent = r.name;
+    $('loginBox').hidden = true;
+    $('work').hidden = false;
+    loadEvents();
+    loadModels().catch(() => {});
+  } catch (e) {
+    CRED = null;
+    try { sessionStorage.removeItem('ben2ph-up'); } catch (_) {}
+    setStatus('loginStatus', errMsg(e), 'error');
+  } finally { $('loginBtn').disabled = false; }
+}
+
+/* ---------- กิจกรรม ---------- */
+document.querySelectorAll('input[name=mode]').forEach(r => r.onchange = () => {
+  const old = document.querySelector('input[name=mode]:checked').value === 'old';
+  $('oldEv').hidden = !old; $('newEv').hidden = old;
+});
+$('evDate').value = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+
+async function loadEvents(selectId) {
+  try {
+    const evs = await api('events');
+    $('evSelect').innerHTML = '';
+    evs.forEach(ev => {
+      const s = splitEvent(ev.name);
+      $('evSelect').add(new Option(s.date ? s.title + ' (' + s.date + ')' : s.title, ev.id));
+    });
+    if (selectId) $('evSelect').value = selectId;
+  } catch (e) {}
+}
+
+async function targetEvent() {
+  if (document.querySelector('input[name=mode]:checked').value === 'old') {
+    const id = $('evSelect').value;
+    if (!id) throw new Error('กรุณาเลือกกิจกรรม');
+    return { id, name: $('evSelect').selectedOptions[0].text };
+  }
+  const d = $('evDate').value, title = $('evTitle').value.trim();
+  if (!d) throw new Error('กรุณาเลือกวันที่จัดกิจกรรม');
+  if (!title) throw new Error('กรุณาใส่ชื่อกิจกรรม');
+  const [y, m, dd] = d.split('-');
+  const ev = await api('createEvent', Object.assign({ date: (+y + 543) + '-' + m + '-' + dd, title }, CRED));
+  // สลับเป็น "กิจกรรมเดิม" เพื่อให้อัปโหลดรอบต่อไปลงที่เดียวกัน
+  await loadEvents(ev.id);
+  document.querySelector('input[name=mode][value=old]').checked = true;
+  $('oldEv').hidden = false; $('newEv').hidden = true;
+  return ev;
+}
+
+/* ---------- เลือกรูป ---------- */
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+$('files').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+
+function addFiles(list) {
+  if (busy) return;
+  const seen = new Set(ITEMS.map(x => x.file.name + '|' + x.file.size));
+  for (const f of list) {
+    if (!/^image\//.test(f.type) && !/\.(heic|heif)$/i.test(f.name)) continue;
+    if (seen.has(f.name + '|' + f.size)) continue;
+    const el = document.createElement('div');
+    el.className = 'qitem';
+    const im = document.createElement('img');
+    im.loading = 'lazy';
+    if (/^image\/(jpeg|png|webp)$/.test(f.type)) im.src = URL.createObjectURL(f);
+    const st = document.createElement('span');
+    st.className = 'st'; st.textContent = 'รอ';
+    el.append(im, st);
+    $('qlist').appendChild(el);
+    ITEMS.push({ file: f, el, state: 'wait' });
+  }
+  refreshInfo();
+}
+$('clearBtn').onclick = () => {
+  if (busy) return;
+  ITEMS.forEach(x => { const im = x.el.querySelector('img'); if (im.src) URL.revokeObjectURL(im.src); });
+  ITEMS = []; $('qlist').innerHTML = ''; $('barFill').style.width = '0'; setStatus('upStatus', '');
+  refreshInfo();
+};
+function refreshInfo() {
+  const n = ITEMS.length, done = ITEMS.filter(x => x.state === 'done' || x.state === 'skip').length;
+  const mb = ITEMS.reduce((s, x) => s + x.file.size, 0) / 1048576;
+  $('qInfo').textContent = n ? `${n} รูป · ${mb.toFixed(1)} MB` + (done ? ` · เสร็จแล้ว ${done}` : '') : 'ยังไม่ได้เลือกรูป';
+  $('startBtn').disabled = busy || !ITEMS.some(x => x.state !== 'done' && x.state !== 'skip');
+  $('clearBtn').hidden = !n || busy;
+}
+function mark(it, state, text) {
+  it.state = state;
+  it.el.className = 'qitem' + (state === 'done' || state === 'skip' ? ' done' : state === 'err' ? ' err' : '');
+  it.el.querySelector('.st').textContent = text;
+  if (state === 'err') it.el.title = text;
+}
+
+/* ---------- อัปโหลด ---------- */
+window.addEventListener('beforeunload', e => { if (busy) { e.preventDefault(); e.returnValue = ''; } });
+
+$('startBtn').onclick = async () => {
+  if (busy) return;
+  let ev;
+  try { ev = await targetEvent(); } catch (e) { return setStatus('upStatus', errMsg(e), 'error'); }
+  busy = true; refreshInfo();
+  setStatus('upStatus', 'กำลังเตรียมตัวตรวจจับใบหน้า…');
+  let faceOk = true;
+  try { await loadModels(); } catch (e) { faceOk = false; }
+
+  const todo = ITEMS.filter(x => x.state !== 'done' && x.state !== 'skip');
+  let finished = 0, faces = 0, failed = 0;
+  const total = todo.length;
+  const t0 = Date.now();
+  const next = () => todo.shift();
+  async function worker() {
+    for (let it = next(); it; it = next()) {
+      try {
+        mark(it, 'work', 'หาใบหน้า');
+        let found = null;
+        if (faceOk && /^image\/(jpeg|png|webp)$/.test(it.file.type)) {
+          try { found = await facesOf(await loadImage(await resizeFile(it.file, DETECT_SIZE, 0.92))); } catch (e) { found = null; }
+        }
+        mark(it, 'work', 'อัปโหลด');
+        let data, mime = it.file.type || 'image/jpeg';
+        if (it.file.size > MAX_BYTES && /^image\/(jpeg|png|webp)$/.test(mime)) {
+          data = (await resizeFile(it.file, 4096, 0.92)).split(',')[1]; mime = 'image/jpeg';
+        } else {
+          data = await BEN2.fileToBase64(it.file);
+        }
+        if (/\.(heic|heif)$/i.test(it.file.name) && !/heic|heif/.test(mime)) mime = 'image/heic';
+        const r = await api('upload', Object.assign({ eventId: ev.id, name: it.file.name, mime, data, faces: found }, CRED));
+        if (found) faces += found.length;
+        mark(it, r.skipped ? 'skip' : 'done', r.skipped ? 'มีแล้ว' : (found ? found.length + ' หน้า' : 'เสร็จ'));
+      } catch (e) {
+        failed++;
+        mark(it, 'err', 'ไม่สำเร็จ');
+        it.el.title = errMsg(e);
+        if (/PIN|รหัส/.test(errMsg(e))) { todo.length = 0; setStatus('upStatus', errMsg(e), 'error'); }
+      }
+      finished++;
+      $('barFill').style.width = (finished / total * 100).toFixed(1) + '%';
+      setStatus('upStatus', `อัปโหลดแล้ว ${finished} / ${total} รูป · พบ ${faces} ใบหน้า` + (failed ? ` · ไม่สำเร็จ ${failed}` : ''));
+      refreshInfo();
+    }
+  }
+  await Promise.all(Array.from({ length: CONCURRENT }, worker));
+  busy = false; refreshInfo();
+  const sec = Math.round((Date.now() - t0) / 1000);
+  setStatus('upStatus',
+    `เสร็จแล้ว ${finished - failed} / ${finished} รูป · พบ ${faces} ใบหน้า · ${sec} วินาที` +
+    (failed ? ` · ไม่สำเร็จ ${failed} รูป (กดอัปโหลดอีกครั้งเพื่อลองใหม่)` : '') +
+    (faceOk ? '' : ' · โหลดตัวตรวจจับใบหน้าไม่ได้ ให้ผู้ดูแลกดสร้างดัชนีในหน้าผู้ดูแลภายหลัง'),
+    failed ? 'error' : 'ok');
+};
+</script>
+</body>
+</html>
