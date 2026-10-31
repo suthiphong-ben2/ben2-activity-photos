@@ -4,13 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ภาพกิจกรรม โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</title>
+<meta name="description" content="อัลบั้มภาพกิจกรรมโรงเรียนเบญจมราชรังสฤษฎิ์ ๒ แยกตามปีการศึกษา ดูและดาวน์โหลดรูปได้">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="โรงเรียนเบญจมราชรังสฤษฎิ์ ๒">
+<meta property="og:title" content="ภาพกิจกรรม โรงเรียนเบญจมราชรังสฤษฎิ์ ๒">
+<meta property="og:description" content="อัลบั้มภาพกิจกรรมแยกตามปีการศึกษา ดูและดาวน์โหลดรูปได้">
+<meta property="og:image" content="https://suthiphong-ben2.github.io/ben2-activity-photos/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=3">
+<link rel="stylesheet" href="assets/style.css?v=4">
 <link rel="icon" type="image/png" href="favicon.png">
-<script src="config.js?v=3"></script>
-<script src="assets/common.js?v=3"></script>
+<script src="config.js?v=4"></script>
+<script src="assets/common.js?v=4"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -48,7 +56,10 @@
       <div class="crumb"><a class="linkbtn" id="backAlbums" href="#">‹ อัลบั้มทั้งหมด</a></div>
       <div class="album-head" style="margin:6px 0 12px">
         <div><h2 id="albumTitle"></h2><div class="sub" id="albumSub"></div></div>
-        <button class="btn ghost small" id="shareBtn">คัดลอกลิงก์อัลบั้ม</button>
+        <div class="share-row">
+          <button class="btn line small" id="lineBtn">แชร์ไป LINE</button>
+          <button class="btn ghost small" id="copyBtn">คัดลอกข้อความ + ลิงก์</button>
+        </div>
       </div>
       <p id="albumStatus" class="status" style="margin-top:0"></p>
       <div id="albumGrid" class="grid"></div>
@@ -199,7 +210,8 @@ function renderAlbums(year) {
     const card = document.createElement('a');
     card.className = 'album';
     card.href = '#e=' + encodeURIComponent(a.id);
-    card.innerHTML = '<div class="cover"><img alt=""><span class="count"></span></div><div class="meta"><b></b><span></span></div>';
+    card.innerHTML = '<div class="cover"><img alt=""><span class="count"></span><button class="card-share" type="button" title="แชร์อัลบั้มนี้ไป LINE">LINE</button></div><div class="meta"><b></b><span></span></div>';
+    card.querySelector('.card-share').onclick = e => { e.preventDefault(); e.stopPropagation(); shareLine(a); };
     card.querySelector('.count').textContent = a.count.toLocaleString('th-TH') + ' รูป';
     card.querySelector('b').textContent = a.title;
     card.querySelector('.meta span').textContent = a.date || '';
@@ -216,6 +228,8 @@ let albumList = [], albumShown = 0, albumItems = [];
 async function openAlbum(id) {
   show('album');
   const a = ALBUMS.find(x => x.id === id);
+  curAlbum = a || null;
+  document.querySelector('.share-row').hidden = !a;
   $('albumTitle').textContent = a ? a.title : 'อัลบั้ม';
   $('albumSub').textContent = a ? [a.date, a.year !== OTHER ? 'ปีการศึกษา ' + a.year : '', a.count.toLocaleString('th-TH') + ' รูป'].filter(Boolean).join(' · ') : '';
   $('backAlbums').href = a ? '#y=' + encodeURIComponent(a.year) : '#';
@@ -240,11 +254,39 @@ function showMore() {
   $('moreBtn').hidden = albumShown >= albumList.length;
 }
 $('moreBtn').onclick = showMore;
-$('shareBtn').onclick = async () => {
-  try { await navigator.clipboard.writeText(location.href); $('shareBtn').textContent = 'คัดลอกแล้ว'; }
-  catch (e) { prompt('คัดลอกลิงก์นี้', location.href); }
-  setTimeout(() => $('shareBtn').textContent = 'คัดลอกลิงก์อัลบั้ม', 1800);
-};
+/* ---------- แชร์อัลบั้มไป LINE ---------- */
+const SHARE_BASE = String(window.BEN2PH_SHARE_URL || (location.origin + location.pathname)).replace(/[?#].*$/, '');
+const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let curAlbum = null;
+function albumLink(a) { return SHARE_BASE + '#e=' + encodeURIComponent(a.id); }
+function albumText(a) {
+  return '📷 ภาพกิจกรรม: ' + a.title + '\n' +
+    [a.date ? '🗓 ' + a.date : '', a.count.toLocaleString('th-TH') + ' รูป'].filter(Boolean).join(' · ') + '\n' +
+    'ดูและดาวน์โหลดรูป 👉 ' + albumLink(a) + '\n' +
+    '— โรงเรียนเบญจมราชรังสฤษฎิ์ ๒';
+}
+function shareLine(a) {
+  const url = IS_MOBILE
+    ? 'https://line.me/R/share?text=' + encodeURIComponent(albumText(a))
+    : 'https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(albumLink(a)) + '&text=' + encodeURIComponent(albumText(a));
+  window.open(url, '_blank', 'noopener');
+}
+async function copyAlbum(a, btn) {
+  const t = albumText(a), label = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(t);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (_) { prompt('คัดลอกข้อความนี้', t); }
+    ta.remove();
+  }
+  btn.textContent = 'คัดลอกแล้ว วางในกลุ่ม LINE ได้เลย';
+  setTimeout(() => btn.textContent = label, 2200);
+}
+$('lineBtn').onclick = () => curAlbum && shareLine(curAlbum);
+$('copyBtn').onclick = () => curAlbum && copyAlbum(curAlbum, $('copyBtn'));
 
 /* ---------- โหลดภาพย่อทีละไม่กี่รูป ---------- */
 const queue = [];

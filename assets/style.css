@@ -152,3 +152,8 @@ a.album{text-decoration:none}
   .year-head h2{font-size:21px}
 }
 #albumsStatus:empty{display:none}
+.share-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn.line{background:#06C755;color:#fff}
+.btn.line:hover{filter:brightness(1.05)}
+.card-share{position:absolute;top:8px;right:8px;font:inherit;font-size:11px;font-weight:700;letter-spacing:.02em;background:#06C755;color:#fff;border:0;border-radius:999px;padding:3px 9px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.card-share:hover{filter:brightness(1.08)}
