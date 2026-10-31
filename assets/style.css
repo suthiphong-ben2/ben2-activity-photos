@@ -105,3 +105,50 @@ table.tbl{border-collapse:collapse;width:100%}
 footer.credit{margin-top:28px;padding:14px 0 18px;border-top:3px solid var(--gold);background:var(--brand);color:#C9D4F2;font-size:13px;text-align:center}
 footer.credit b{color:var(--gold);font-weight:600}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- อัลบั้มตามปีการศึกษา ---------- */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding-block:14px}
+.years{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.chip{font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:6px 14px;border-radius:999px;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:inset 0 -3px 0 var(--gold)}
+.find{position:relative;width:min(280px,100%)}
+.find input{padding-left:32px}
+.find svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+.face-cta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:var(--r);padding:10px 14px}
+.face-cta p{margin:0;flex:1;min-width:200px;color:var(--muted);font-size:14px}
+.face-cta p b{color:var(--fg)}
+.year-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.year-head h2{font-family:var(--font-d);font-size:24px;margin:0;line-height:1.2}
+.year-head span{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.albums{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+@media (max-width:600px){.albums{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.album{display:flex;flex-direction:column;text-align:left;padding:0;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);overflow:hidden;cursor:pointer;color:inherit;font:inherit}
+.album:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(22,51,127,.12)}
+.album .cover{position:relative;aspect-ratio:4/3;background:var(--sunk);overflow:hidden}
+.album .cover img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .25s}
+.album .cover img.loaded{opacity:1}
+.album .count{position:absolute;right:8px;bottom:8px;font-size:12px;font-weight:600;background:rgba(10,18,40,.72);color:#fff;border-radius:999px;padding:2px 9px;font-variant-numeric:tabular-nums}
+.album .meta{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px}
+.album .meta b{font-family:var(--font-d);font-size:16px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.album .meta span{font-size:13px;color:var(--muted)}
+@media (max-width:600px){.album .meta b{font-size:14px}.album .meta{padding:8px 10px 10px}}
+.crumb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:14px}
+.album-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px}
+.album-head h2{font-family:var(--font-d);font-size:26px;margin:0;line-height:1.25;text-wrap:balance}
+.album-head .sub{color:var(--muted);font-size:14px}
+.linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--accent);cursor:pointer;padding:4px 0;font-weight:600}
+.linkbtn:hover{text-decoration:underline}
+a.album{text-decoration:none}
+@media (max-width:600px){
+  header.top .wrap{gap:10px}
+  header.top .term{display:none}
+  header.top h1{font-size:16px}
+  .admin-link.ghost{display:none}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .years{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+  .years::-webkit-scrollbar{display:none}
+  .find{width:100%}
+  .year-head h2{font-size:21px}
+}
+#albumsStatus:empty{display:none}

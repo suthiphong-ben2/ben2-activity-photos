@@ -17,26 +17,52 @@
   <img src="logo.png" alt="ตราโรงเรียนเบญจมราชรังสฤษฎิ์ ๒" class="logo" width="36" height="48">
   <div class="ttl">
     <h1>ภาพกิจกรรม <span class="nowrap">โรงเรียนเบญจมราชรังสฤษฎิ์ ๒</span></h1>
-    <span class="term">ค้นหารูปของคุณด้วยใบหน้า หรือเลือกดูตามกิจกรรม</span>
+    <span class="term" id="term">อัลบั้มภาพกิจกรรมแยกตามปีการศึกษา</span>
   </div>
   <a class="admin-link ghost" href="upload.html" target="_blank" rel="noopener">อัปโหลดรูป</a>
   <a class="admin-link" href="admin.html" target="_blank" rel="noopener">ผู้ดูแล</a>
 </div></header>
 
 <div class="wrap">
-  <nav class="tabs" role="tablist" aria-label="มุมมอง">
-    <button role="tab" data-tab="face" aria-selected="true">ค้นหาด้วยใบหน้า</button>
-    <button role="tab" data-tab="browse" aria-selected="false">ดูตามกิจกรรม</button>
-    <button role="tab" data-tab="privacy" aria-selected="false">ไม่ให้ค้นเจอหน้าฉัน</button>
-  </nav>
-
   <main>
-    <!-- ค้นหาด้วยใบหน้า -->
-    <section id="tab-face">
+    <!-- ===== อัลบั้มตามปีการศึกษา ===== -->
+    <section id="v-albums">
+      <div class="toolbar">
+        <div class="years" id="years" role="group" aria-label="ปีการศึกษา"></div>
+        <label class="find" aria-label="ค้นหาอัลบั้ม">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" id="q" placeholder="ค้นหาชื่อกิจกรรม">
+        </label>
+      </div>
+      <div class="face-cta" style="margin-bottom:16px">
+        <p><b>หารูปตัวเองไม่เจอ?</b> ถ่ายรูปหน้าตัวเอง ระบบจะช่วยหารูปกิจกรรมที่มีคุณอยู่</p>
+        <a class="btn ghost small" href="#face">ค้นหาด้วยใบหน้า</a>
+      </div>
+      <div class="year-head"><h2 id="yearTitle">กำลังโหลดอัลบั้ม…</h2><span id="yearInfo"></span></div>
+      <p id="albumsStatus" class="status"></p>
+      <div id="albums" class="albums" style="margin-top:12px"></div>
+    </section>
+
+    <!-- ===== ในอัลบั้ม ===== -->
+    <section id="v-album" hidden>
+      <div class="crumb"><a class="linkbtn" id="backAlbums" href="#">‹ อัลบั้มทั้งหมด</a></div>
+      <div class="album-head" style="margin:6px 0 12px">
+        <div><h2 id="albumTitle"></h2><div class="sub" id="albumSub"></div></div>
+        <button class="btn ghost small" id="shareBtn">คัดลอกลิงก์อัลบั้ม</button>
+      </div>
+      <p id="albumStatus" class="status" style="margin-top:0"></p>
+      <div id="albumGrid" class="grid"></div>
+      <div class="more-wrap"><button id="moreBtn" class="btn ghost" hidden>แสดงเพิ่ม</button></div>
+    </section>
+
+    <!-- ===== ค้นหาด้วยใบหน้า (เสริม) ===== -->
+    <section id="v-face" hidden>
+      <div class="crumb"><a class="linkbtn" href="#">‹ กลับไปดูอัลบั้ม</a></div>
       <div class="box">
-        <div class="row">
-          <label class="field grow"><span class="lbl">กิจกรรม</span>
-            <select id="faceEvent"><option value="">ทุกกิจกรรม</option></select>
+        <h2>ค้นหารูปตัวเองด้วยใบหน้า</h2>
+        <div class="row" style="margin-top:8px">
+          <label class="field grow"><span class="lbl">ค้นหาใน</span>
+            <select id="faceScope"></select>
           </label>
           <label class="field"><span class="lbl">ความเข้มงวด: <b id="thrVal">ปกติ</b></span>
             <input type="range" id="thr" min="0.40" max="0.58" step="0.02" value="0.50">
@@ -50,30 +76,20 @@
           </label>
         </div>
         <p class="note">ใช้รูปที่เห็นหน้าชัด มีคนเดียวในรูป · รูปของคุณประมวลผลในเครื่องนี้เท่านั้น
-          ระบบส่งไปเพียงค่าตัวเลขของใบหน้าเพื่อค้นหา และไม่บันทึกไว้</p>
+          ระบบส่งไปเพียงค่าตัวเลขของใบหน้าเพื่อค้นหา และไม่บันทึกไว้ ·
+          <a href="#optout">ไม่ต้องการให้ระบบค้นเจอหน้าคุณ?</a></p>
         <p id="faceStatus" class="status"></p>
       </div>
-      <div id="faceResults" class="grid"></div>
+      <div id="faceGrid" class="grid" style="margin-top:14px"></div>
     </section>
 
-    <!-- ดูตามกิจกรรม -->
-    <section id="tab-browse" hidden>
-      <div class="box row">
-        <label class="field grow"><span class="lbl">กิจกรรม</span>
-          <select id="browseEvent"><option value="">เลือกกิจกรรม</option></select>
-        </label>
-      </div>
-      <p id="browseStatus" class="status"></p>
-      <div id="browseResults" class="grid"></div>
-      <div class="more-wrap"><button id="moreBtn" class="btn ghost" hidden>แสดงเพิ่ม</button></div>
-    </section>
-
-    <!-- ความเป็นส่วนตัว -->
-    <section id="tab-privacy" hidden>
+    <!-- ===== ไม่ให้ค้นเจอหน้า ===== -->
+    <section id="v-optout" hidden>
+      <div class="crumb"><a class="linkbtn" href="#face">‹ กลับไปค้นหาด้วยใบหน้า</a></div>
       <div class="box">
         <h2>ไม่ให้ระบบค้นเจอหน้าฉัน</h2>
         <p class="note">เมื่อส่งคำขอ ระบบจะลบใบหน้าของคุณออกจากดัชนีทุกกิจกรรม ไม่ทำดัชนีหน้าคุณในรูปที่อัปโหลดใหม่
-          และไม่แสดงผลเมื่อมีคนค้นหาด้วยหน้าคุณ รูปกิจกรรมยังดูได้ในแท็บ "ดูตามกิจกรรม" ตามปกติ
+          และไม่แสดงผลเมื่อมีคนค้นหาด้วยหน้าคุณ รูปในอัลบั้มยังดูได้ตามปกติ
           ถ้าต้องการให้ลบรูปใดออก หรือยกเลิกคำขอ กรุณาติดต่องานประชาสัมพันธ์โรงเรียน</p>
         <div class="pick">
           <img id="ooSelfie" alt="รูปที่ใช้ส่งคำขอ" hidden>
@@ -105,102 +121,132 @@
 <script>
 const { $, api, loadModels, detectFaces, loadImage, resizeFile, setStatus, errMsg, splitEvent, reportHeight } = BEN2;
 const PAGE = 120;
-let EVENTS = [];
+const OTHER = 'อื่นๆ';
+let ALBUMS = [];          // [{id, name, title, date, year, count, cover}]
+let YEARS = [];
+let curYear = '';
 
-/* ---------- แท็บ ---------- */
-function switchTab(name) {
-  document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
-  ['face', 'browse', 'privacy'].forEach(n => $('tab-' + n).hidden = n !== name);
-}
-document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
-
-$('thr').oninput = () => {
-  const v = +$('thr').value;
-  $('thrVal').textContent = v <= 0.44 ? 'เข้มงวด' : v <= 0.52 ? 'ปกติ' : 'ผ่อนปรน';
-};
-
-function eventLabel(ev) {
-  const s = splitEvent(ev.name);
-  return s.date ? s.title + ' (' + s.date + ')' : s.title;
+/* ---------- ปีการศึกษา: เปิดเทอม พ.ค. — ก่อน พ.ค. นับเป็นปีการศึกษาก่อนหน้า ---------- */
+function academicYear(name) {
+  const m = /^(25\d\d)-(\d\d)-\d\d/.exec(name || '');
+  if (!m) return OTHER;
+  return String(+m[2] >= 5 ? +m[1] : +m[1] - 1);
 }
 
+/* ---------- เส้นทางในหน้า (#y=2569 · #e=ID · #face · #optout) ---------- */
+function show(view) {
+  ['albums', 'album', 'face', 'optout'].forEach(v => $('v-' + v).hidden = v !== view);
+}
+function route() {
+  closeLb();
+  const h = location.hash;
+  let m;
+  if (h === '#face') { show('face'); loadModels().catch(() => {}); }
+  else if (h === '#optout') { show('optout'); loadModels().catch(() => {}); }
+  else if ((m = /^#e=(.+)$/.exec(h))) openAlbum(decodeURIComponent(m[1]));
+  else {
+    m = /^#y=(.+)$/.exec(h);
+    const y = m ? decodeURIComponent(m[1]) : '';
+    show('albums');
+    if (ALBUMS.length) renderAlbums(YEARS.includes(y) ? y : (curYear || YEARS[0]));
+  }
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- โหลดอัลบั้ม ---------- */
 async function init() {
   reportHeight();
   try {
-    EVENTS = await api('events');
-    for (const ev of EVENTS) {
-      $('faceEvent').add(new Option(eventLabel(ev), ev.id));
-      $('browseEvent').add(new Option(eventLabel(ev), ev.id));
-    }
-    const m = /^#e=(.+)$/.exec(location.hash);
-    if (m && EVENTS.some(e => e.id === m[1])) { $('browseEvent').value = m[1]; switchTab('browse'); onBrowse(); }
+    const list = await api('albums');
+    ALBUMS = list.filter(a => a.count > 0).map(a => {
+      const s = splitEvent(a.name);
+      return Object.assign(a, { title: s.title, date: s.date, year: academicYear(a.name) });
+    });
+    YEARS = [...new Set(ALBUMS.map(a => a.year))].sort((a, b) => a === OTHER ? 1 : b === OTHER ? -1 : b - a);
+    $('years').innerHTML = '';
+    YEARS.forEach(y => {
+      const b = document.createElement('button');
+      b.className = 'chip';
+      b.textContent = y === OTHER ? OTHER : 'ปีการศึกษา ' + y;
+      b.dataset.y = y;
+      b.onclick = () => { $('q').value = ''; location.hash = 'y=' + encodeURIComponent(y); };
+      $('years').appendChild(b);
+    });
+    $('faceScope').innerHTML = '';
+    $('faceScope').add(new Option('ทุกอัลบั้ม', ''));
+    ALBUMS.forEach(a => $('faceScope').add(new Option((a.date ? a.date + ' · ' : '') + a.title, a.id)));
+    if (!ALBUMS.length) { $('yearTitle').textContent = 'ยังไม่มีอัลบั้ม'; }
   } catch (e) {
-    setStatus('faceStatus', 'โหลดรายการกิจกรรมไม่สำเร็จ: ' + errMsg(e), 'error');
+    $('yearTitle').textContent = 'โหลดอัลบั้มไม่สำเร็จ';
+    setStatus('albumsStatus', errMsg(e), 'error');
   }
-  loadModels().catch(() => {}); // โหลดตัวตรวจจับใบหน้ารอไว้
+  route();
 }
 
-/* ---------- ค้นหาด้วยใบหน้า ---------- */
-async function faceFromFile(file, previewId, statusId) {
-  setStatus(statusId, 'กำลังเตรียมตัวตรวจจับใบหน้า…');
-  const url = await resizeFile(file, 1024);
-  $(previewId).src = url;
-  $(previewId).hidden = false;
-  await loadModels();
-  setStatus(statusId, 'กำลังหาใบหน้าในรูป…');
-  return detectFaces(await loadImage(url), 0.5);
-}
-
-$('selfieInput').onchange = async e => {
-  const file = e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  renderGrid('faceResults', [], false);
-  try {
-    const faces = await faceFromFile(file, 'selfie', 'faceStatus');
-    if (!faces.length) return setStatus('faceStatus', 'ไม่พบใบหน้าในรูป ลองใช้รูปที่หน้าชัดและสว่างกว่านี้', 'error');
-    const area = f => f.detection.box.width * f.detection.box.height;
-    const main = faces.reduce((a, b) => area(b) > area(a) ? b : a);
-    setStatus('faceStatus', (faces.length > 1 ? 'พบหลายใบหน้า ใช้ใบหน้าที่ใหญ่ที่สุด · ' : '') + 'กำลังค้นหารูป…');
-    const out = await api('search', { desc: Array.from(main.descriptor), threshold: +$('thr').value, eventId: $('faceEvent').value });
-    if (out.blocked) return setStatus('faceStatus', 'เจ้าของใบหน้านี้ขอไม่ให้ระบบค้นหาไว้ จึงไม่แสดงผล');
-    if (!out.results.length) return setStatus('faceStatus', 'ไม่พบรูปที่ตรงกัน ลองเลื่อนความเข้มงวดไปทาง "ผ่อนปรน" หรือใช้รูปอื่น');
-    setStatus('faceStatus', 'พบ ' + out.results.length + ' รูป', 'ok');
-    const names = Object.fromEntries(EVENTS.map(e => [e.id, splitEvent(e.name).title]));
-    renderGrid('faceResults', out.results.map(r => ({ id: r.id, name: r.name, caption: names[r.eventId] || '' })), false);
-  } catch (err) {
-    setStatus('faceStatus', 'เกิดข้อผิดพลาด: ' + errMsg(err), 'error');
+function renderAlbums(year) {
+  const q = $('q').value.trim().toLowerCase();
+  curYear = year;
+  document.querySelectorAll('#years .chip').forEach(b => b.setAttribute('aria-pressed', String(!q && b.dataset.y === year)));
+  const list = q ? ALBUMS.filter(a => a.title.toLowerCase().includes(q)) : ALBUMS.filter(a => a.year === year);
+  $('yearTitle').textContent = q ? 'ผลการค้นหา "' + $('q').value.trim() + '"' : (year === OTHER ? 'อัลบั้มอื่นๆ' : 'ปีการศึกษา ' + year);
+  const photos = list.reduce((s, a) => s + a.count, 0);
+  $('yearInfo').textContent = list.length ? list.length + ' อัลบั้ม · ' + photos.toLocaleString('th-TH') + ' รูป' : '';
+  const g = $('albums');
+  g.querySelectorAll('img').forEach(i => io.unobserve(i));
+  g.innerHTML = list.length ? '' : '<div class="empty">ไม่พบอัลบั้ม</div>';
+  for (const a of list) {
+    const card = document.createElement('a');
+    card.className = 'album';
+    card.href = '#e=' + encodeURIComponent(a.id);
+    card.innerHTML = '<div class="cover"><img alt=""><span class="count"></span></div><div class="meta"><b></b><span></span></div>';
+    card.querySelector('.count').textContent = a.count.toLocaleString('th-TH') + ' รูป';
+    card.querySelector('b').textContent = a.title;
+    card.querySelector('.meta span').textContent = a.date || '';
+    const img = card.querySelector('img');
+    if (a.cover) { img.dataset.id = a.cover; img.dataset.size = 500; io.observe(img); }
+    g.appendChild(card);
   }
-};
+}
+let qTimer;
+$('q').oninput = () => { clearTimeout(qTimer); qTimer = setTimeout(() => renderAlbums(curYear), 200); };
 
-/* ---------- ดูตามกิจกรรม ---------- */
-let browseList = [], browseShown = 0;
-$('browseEvent').onchange = onBrowse;
-async function onBrowse() {
-  const id = $('browseEvent').value;
-  renderGrid('browseResults', [], false);
+/* ---------- ในอัลบั้ม ---------- */
+let albumList = [], albumShown = 0, albumItems = [];
+async function openAlbum(id) {
+  show('album');
+  const a = ALBUMS.find(x => x.id === id);
+  $('albumTitle').textContent = a ? a.title : 'อัลบั้ม';
+  $('albumSub').textContent = a ? [a.date, a.year !== OTHER ? 'ปีการศึกษา ' + a.year : '', a.count.toLocaleString('th-TH') + ' รูป'].filter(Boolean).join(' · ') : '';
+  $('backAlbums').href = a ? '#y=' + encodeURIComponent(a.year) : '#';
+  $('albumGrid').querySelectorAll('img').forEach(i => io.unobserve(i));
+  $('albumGrid').innerHTML = '';
   $('moreBtn').hidden = true;
-  if (!id) return setStatus('browseStatus', '');
-  history.replaceState(null, '', '#e=' + id);
-  setStatus('browseStatus', 'กำลังโหลด…');
+  albumItems = [];
+  setStatus('albumStatus', 'กำลังโหลดรูป…');
   try {
-    browseList = await api('photos', { eventId: id });
-    browseShown = 0;
-    setStatus('browseStatus', browseList.length + ' รูป');
+    albumList = await api('photos', { eventId: id });
+    albumShown = 0;
+    setStatus('albumStatus', albumList.length ? '' : 'อัลบั้มนี้ยังไม่มีรูป');
     showMore();
   } catch (e) {
-    setStatus('browseStatus', 'โหลดไม่สำเร็จ: ' + errMsg(e), 'error');
+    setStatus('albumStatus', 'โหลดไม่สำเร็จ: ' + errMsg(e), 'error');
   }
 }
 function showMore() {
-  const next = browseList.slice(browseShown, browseShown + PAGE).map(p => ({ id: p.id, name: p.name, caption: '' }));
-  browseShown += next.length;
-  renderGrid('browseResults', next, true, browseList);
-  $('moreBtn').hidden = browseShown >= browseList.length;
+  const next = albumList.slice(albumShown, albumShown + PAGE).map(p => ({ id: p.id, name: p.name }));
+  albumShown += next.length;
+  addTiles($('albumGrid'), next, albumItems);
+  $('moreBtn').hidden = albumShown >= albumList.length;
 }
 $('moreBtn').onclick = showMore;
+$('shareBtn').onclick = async () => {
+  try { await navigator.clipboard.writeText(location.href); $('shareBtn').textContent = 'คัดลอกแล้ว'; }
+  catch (e) { prompt('คัดลอกลิงก์นี้', location.href); }
+  setTimeout(() => $('shareBtn').textContent = 'คัดลอกลิงก์อัลบั้ม', 1800);
+};
 
-/* ---------- ตารางรูป + โหลดภาพย่อทีละไม่กี่รูป ---------- */
+/* ---------- โหลดภาพย่อทีละไม่กี่รูป ---------- */
 const queue = [];
 let active = 0;
 const MAX_CONCURRENT = 4;
@@ -212,18 +258,15 @@ function pump() {
     const img = queue.shift();
     if (!img.isConnected) continue;
     active++;
-    api('image', { id: img.dataset.id, size: 400 })
+    api('image', { id: img.dataset.id, size: +img.dataset.size || 400 })
       .then(u => { img.src = u; img.classList.add('loaded'); })
       .catch(() => img.parentElement.classList.add('err'))
       .finally(() => { active--; pump(); });
   }
 }
-const gridItems = {};
-function renderGrid(targetId, items, append) {
-  const g = $(targetId);
-  if (!append) { g.querySelectorAll('img').forEach(i => io.unobserve(i)); g.innerHTML = ''; gridItems[targetId] = []; }
-  gridItems[targetId] = (gridItems[targetId] || []).concat(items);
-  items.forEach((it) => {
+function addTiles(grid, items, store, captionOf) {
+  for (const it of items) {
+    store.push(it);
     const tile = document.createElement('button');
     tile.className = 'tile';
     const img = document.createElement('img');
@@ -231,12 +274,12 @@ function renderGrid(targetId, items, append) {
     img.dataset.id = it.id;
     const cap = document.createElement('span');
     cap.className = 'cap';
-    cap.textContent = it.caption || '';
+    cap.textContent = captionOf ? captionOf(it) : '';
     tile.append(img, cap);
-    tile.onclick = () => { const L = gridItems[targetId]; openLb(L, L.indexOf(it)); };
-    g.appendChild(tile);
+    tile.onclick = () => openLb(store, store.indexOf(it));
+    grid.appendChild(tile);
     io.observe(img);
-  });
+  }
 }
 
 /* ---------- ดูรูปใหญ่ / ดาวน์โหลด ---------- */
@@ -246,7 +289,7 @@ async function openLb(list, i) {
   const it = list[i];
   $('lbImg').classList.remove('loaded');
   $('lbImg').removeAttribute('src');
-  $('lbName').textContent = it.name + ' · กำลังโหลด…';
+  $('lbName').textContent = (i + 1) + ' / ' + list.length + ' · กำลังโหลด…';
   $('lightbox').hidden = false;
   $('lbPrev').hidden = i <= 0;
   $('lbNext').hidden = i >= list.length - 1;
@@ -255,7 +298,7 @@ async function openLb(list, i) {
     if (lbList[lbIndex] !== it) return;
     $('lbImg').src = u;
     $('lbImg').classList.add('loaded');
-    $('lbName').textContent = it.name;
+    $('lbName').textContent = (i + 1) + ' / ' + list.length + (it.album ? ' · ' + it.album : '');
   } catch (e) {
     if (lbList[lbIndex] === it) $('lbName').textContent = 'โหลดรูปไม่สำเร็จ';
   }
@@ -287,6 +330,45 @@ $('lbDl').onclick = async () => {
     $('lbName').textContent = 'ดาวน์โหลดไม่สำเร็จ: ' + errMsg(e);
   } finally {
     btn.disabled = false; btn.textContent = 'ดาวน์โหลด';
+  }
+};
+
+/* ---------- ค้นหาด้วยใบหน้า ---------- */
+$('thr').oninput = () => {
+  const v = +$('thr').value;
+  $('thrVal').textContent = v <= 0.44 ? 'เข้มงวด' : v <= 0.52 ? 'ปกติ' : 'ผ่อนปรน';
+};
+async function faceFromFile(file, previewId, statusId) {
+  setStatus(statusId, 'กำลังเตรียมตัวตรวจจับใบหน้า…');
+  const url = await resizeFile(file, 1024);
+  $(previewId).src = url;
+  $(previewId).hidden = false;
+  await loadModels();
+  setStatus(statusId, 'กำลังหาใบหน้าในรูป…');
+  return detectFaces(await loadImage(url), 0.5);
+}
+let faceItems = [];
+$('selfieInput').onchange = async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  $('faceGrid').querySelectorAll('img').forEach(i => io.unobserve(i));
+  $('faceGrid').innerHTML = '';
+  faceItems = [];
+  try {
+    const faces = await faceFromFile(file, 'selfie', 'faceStatus');
+    if (!faces.length) return setStatus('faceStatus', 'ไม่พบใบหน้าในรูป ลองใช้รูปที่หน้าชัดและสว่างกว่านี้', 'error');
+    const area = f => f.detection.box.width * f.detection.box.height;
+    const main = faces.reduce((a, b) => area(b) > area(a) ? b : a);
+    setStatus('faceStatus', (faces.length > 1 ? 'พบหลายใบหน้า ใช้ใบหน้าที่ใหญ่ที่สุด · ' : '') + 'กำลังค้นหารูป…');
+    const out = await api('search', { desc: Array.from(main.descriptor), threshold: +$('thr').value, eventId: $('faceScope').value });
+    if (out.blocked) return setStatus('faceStatus', 'เจ้าของใบหน้านี้ขอไม่ให้ระบบค้นหาไว้ จึงไม่แสดงผล');
+    if (!out.results.length) return setStatus('faceStatus', 'ไม่พบรูปที่ตรงกัน ลองเลื่อนความเข้มงวดไปทาง "ผ่อนปรน" หรือใช้รูปอื่น');
+    setStatus('faceStatus', 'พบ ' + out.results.length + ' รูป (แตะรูปเพื่อดูใหญ่และดาวน์โหลด)', 'ok');
+    const titles = Object.fromEntries(ALBUMS.map(a => [a.id, a.title]));
+    addTiles($('faceGrid'), out.results.map(r => ({ id: r.id, name: r.name, album: titles[r.eventId] || '' })), faceItems, it => it.album);
+  } catch (err) {
+    setStatus('faceStatus', 'เกิดข้อผิดพลาด: ' + errMsg(err), 'error');
   }
 };
 

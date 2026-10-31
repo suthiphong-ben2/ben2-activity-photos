@@ -48,6 +48,7 @@ function doPost(e) {
 const API = {
   /* ---- ทุกคน ---- */
   events:   r => listEvents_(),
+  albums:   r => listEvents_().map(ev => Object.assign({}, ev, summary_(ev.id))),
   photos:   r => listPhotos_(r.eventId),
   image:    r => getImage_(r.id, r.size),
   search:   r => search_(r.desc, r.threshold, r.eventId),
@@ -251,6 +252,34 @@ function listPhotos_(eventId) {
   return list;
 }
 
+/** จำนวนรูป + รูปปก (รูปแรกตามชื่อไฟล์) ของกิจกรรม — แคช 6 ชั่วโมง ล้างเมื่อมีการอัปโหลด */
+function summary_(eventId) {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get('sum_' + eventId);
+  if (hit) return JSON.parse(hit);
+  let count = 0, cover = '', coverName = null;
+  const stack = [eventId];
+  while (stack.length) {
+    const fid = stack.pop();
+    let token;
+    do {
+      const res = Drive.Files.list({
+        q: "'" + fid + "' in parents and trashed = false and (mimeType contains 'image/' or mimeType = 'application/vnd.google-apps.folder')",
+        fields: 'nextPageToken, files(id, name, mimeType)', pageSize: 1000, pageToken: token,
+        supportsAllDrives: true, includeItemsFromAllDrives: true
+      });
+      for (const f of res.files || []) {
+        if (f.mimeType === 'application/vnd.google-apps.folder') stack.push(f.id);
+        else { count++; if (coverName === null || f.name < coverName) { coverName = f.name; cover = f.id; } }
+      }
+      token = res.nextPageToken;
+    } while (token);
+  }
+  const out = { count: count, cover: cover };
+  cache.put('sum_' + eventId, JSON.stringify(out), 21600);
+  return out;
+}
+
 /** รูปเป็น data URL ตามขนาดด้านยาว 100–2048 px */
 function getImage_(id, size) {
   id = String(id || '');
@@ -317,7 +346,7 @@ function uploadPhoto_(r, who) {
   if (bytes.length > MAX_UPLOAD_BYTES) throw new Error('ไฟล์ใหญ่เกิน 25 MB');
   const file = folder.createFile(Utilities.newBlob(bytes, mime, name));
   file.setDescription('อัปโหลดโดย ' + who + ' · ' + new Date().toISOString());
-  CacheService.getScriptCache().remove('ph_' + ev.id);
+  CacheService.getScriptCache().removeAll(['ph_' + ev.id, 'sum_' + ev.id]);
   let filtered = 0;
   if (Array.isArray(r.faces)) filtered = saveFaces_(ev.id, [{ id: file.getId(), name: name, faces: r.faces }]).filtered;
   return { id: file.getId(), skipped: false, filtered: filtered };
@@ -405,7 +434,7 @@ function adminListEvents_() {
 /** รูปที่ยังไม่มีในดัชนี + ลบรายการของรูปที่ไม่อยู่ในโฟลเดอร์แล้ว */
 function adminPending_(eventId) {
   const ev = assertEvent_(String(eventId || ''));
-  CacheService.getScriptCache().remove('ph_' + ev.id);
+  CacheService.getScriptCache().removeAll(['ph_' + ev.id, 'sum_' + ev.id]);
   const imgs = listImages_(DriveApp.getFolderById(ev.id), []);
   const ids = new Set(imgs.map(x => x.id));
   const lock = LockService.getScriptLock();
